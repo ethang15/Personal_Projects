@@ -56,9 +56,14 @@ bool Game::parseAndExecuteMove(const std::string& input, std::string& currentPla
     board.isWithinBounds(endRow, endCol) && board.isPathClear(startRow, startCol, endRow, endCol) && 
     !board.isCapturingOwnPiece(endRow, endCol, currentPlayer) && !board.doesMoveExposeKing(startRow, startCol, endRow, endCol, currentPlayer)) {
 
-        std::cout << "Valid Move \n";
-        return board.movePiece(startRow, startCol, endRow, endCol);
 
+        std::cout << "Valid Move \n";
+        bool moveAllowed = board.movePiece(startRow, startCol, endRow, endCol);
+        if ((pieceToMove->getSymbol() == 'P' && endRow == 0) || (pieceToMove->getSymbol() == 'p' && endRow == 7)){
+            board.pawnPromotion(endRow, endCol, currentPlayer);
+        }
+        
+        return moveAllowed;
     }
     else{
         bool pieceHasValidMove = pieceToMove && pieceToMove->isValidMove(startRow, startCol, endRow, endCol);

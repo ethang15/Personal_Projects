@@ -1,5 +1,4 @@
 #include "Board.h"
-#include "Board.h"
 #include "Pawn.h"
 #include "Rook.h"
 #include "Knight.h"
@@ -248,4 +247,12 @@ bool Board::doesMoveExposeKing(int startRow, int startCol, int endRow, int endCo
     grid[endRow][endCol] = capturedPiece;
 
     return kingInCheck;
+}
+
+void Board::pawnPromotion(int endRow, int endCol, std::string& currentPlayer) {
+    auto queenToAdd = (currentPlayer == "white") 
+    ? new Queen("white") 
+    : new Queen("black");
+
+    placePiece(endRow, endCol, queenToAdd);
 }
