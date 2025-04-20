@@ -39,7 +39,6 @@ bool Board::movePiece(int startRow, int startCol, int endRow, int endCol) {
         grid[startRow][startCol] = nullptr;
         return true;
     } else {
-        std::cout << "Not a Valid Move, Try Again \n";
         return false;
     }
 }
@@ -108,6 +107,14 @@ void Board::initBoard() {
 }
 
 bool Board::isPathClear(int startRow, int startCol, int endRow, int endCol) const {
+    ChessPiece* piece = grid[startRow][startCol];
+    if (!piece) return false;
+
+    // Knights can jump, so path clearance doesn't apply
+    if (piece->getSymbol() == 'N' || piece->getSymbol() == 'n') {
+        return true;
+    }    
+    
     int rowStep = (endRow > startRow) ? 1 : (endRow < startRow) ? -1 : 0;
     int colStep = (endCol > startCol) ? 1 : (endCol < startCol) ? -1 : 0;
     int currentRow = startRow + rowStep;
@@ -132,75 +139,84 @@ bool Board::isWithinBounds(int row, int col) const {
     return (0 <= row && row < SIZE) && (0 <= col && col < SIZE);
 }
 
-bool Board::isKinginCheck(std::string& currentPlayer){
-    int king_row = 0;
-    int king_col = 0;
+bool Board::isKingInCheck(std::string& currentPlayer) {
+    int king_row = 0, king_col = 0;
     char symbol = (currentPlayer == "white") ? 'K' : 'k';
     char enemy_queen = (currentPlayer == "white") ? 'q' : 'Q';
     char enemy_rook = (currentPlayer == "white") ? 'r' : 'R';
     char enemy_bishop = (currentPlayer == "white") ? 'b' : 'B';
     char enemy_knight = (currentPlayer == "white") ? 'n' : 'N';
     char enemy_pawn = (currentPlayer == "white") ? 'p' : 'P';
+
     std::vector<std::pair<int, int>> diagonals = { {1, 1}, {1, -1}, {-1, -1}, {-1, 1}};
     std::vector<std::pair<int, int>> straights = { {1, 0}, {-1, 0}, {0, 1}, {0, -1} };
     std::vector<std::pair<int, int>> knights = {
         { -2, -1 }, { -2,  1 }, { -1, -2 }, { -1,  2 },
         {  1, -2 }, {  1,  2 }, {  2, -1 }, {  2,  1 }
     };
+    auto pawns = (currentPlayer == "white")
+    ? std::vector<std::pair<int, int>>{ { -1, -1 }, { -1, 1 } }
+    : std::vector<std::pair<int, int>>{ { 1, -1 }, { 1, 1 } };
 
     findKing(currentPlayer, king_row, king_col);
 
-    // Checking rows and columns
-    for (const auto& dir : straights){
-        int rowStep = dir.first;
-        int colStep = dir.second;
-        int currentRow = king_row + rowStep;
-        int currentCol = king_col + colStep;
-        while ((isWithinBounds(currentRow, currentCol))){
-            ChessPiece* piece = grid[currentRow][currentCol];
-            if (piece && ((piece->getSymbol() == enemy_queen) || (piece->getSymbol() == enemy_rook))) {
-                return true;
+    // Straights: Rooks + Queens
+    for (const auto& [rowStep, colStep] : straights) {
+        int r = king_row + rowStep;
+        int c = king_col + colStep;
+        while (isWithinBounds(r, c)) {
+            ChessPiece* piece = grid[r][c];
+            if (piece) {
+                if (piece->getSymbol() == enemy_rook || piece->getSymbol() == enemy_queen)
+                    return true;
+                break;
             }
-            currentRow += rowStep;
-            currentCol += colStep;
+            r += rowStep;
+            c += colStep;
         }
     }
 
-    // Checking diagonals
-    for (const auto& dir : diagonals){
-        int rowStep = dir.first;
-        int colStep = dir.second;
-        int currentRow = king_row + rowStep;
-        int currentCol = king_col + colStep;
-        while ((isWithinBounds(currentRow, currentCol))){
-            ChessPiece* piece = grid[currentRow][currentCol];
-            if (piece && ((piece->getSymbol() == enemy_queen) || (piece->getSymbol() == enemy_bishop))) {
-                return true;
+    // Diagonals: Bishops + Queens
+    for (const auto& [rowStep, colStep] : diagonals) {
+        int r = king_row + rowStep;
+        int c = king_col + colStep;
+        while (isWithinBounds(r, c)) {
+            ChessPiece* piece = grid[r][c];
+            if (piece) {
+                if (piece->getSymbol() == enemy_bishop || piece->getSymbol() == enemy_queen)
+                    return true;
+                break;
             }
-            currentRow += rowStep;
-            currentCol += colStep;
+            r += rowStep;
+            c += colStep;
         }
     }
 
-    // Checking Knight moves
-    for (const auto& dir : knights){
-        int rowStep = dir.first;
-        int colStep = dir.second;
-        int currentRow = king_row + rowStep;
-        int currentCol = king_col + colStep;
-
-        if ((isWithinBounds(currentRow, currentCol))){
-            ChessPiece* piece = grid[currentRow][currentCol];
-            if (piece && (piece->getSymbol() == enemy_knight)) {
+    // Knights
+    for (const auto& [rowStep, colStep] : knights) {
+        int r = king_row + rowStep;
+        int c = king_col + colStep;
+        if (isWithinBounds(r, c)) {
+            ChessPiece* piece = grid[r][c];
+            if (piece && piece->getSymbol() == enemy_knight)
                 return true;
-            }
         }
-        currentRow = king_row;
-        currentCol = king_col;
     }
-    
+
+    // Pawns
+    for (const auto& [rowStep, colStep] : pawns) {
+        int r = king_row + rowStep;
+        int c = king_col + colStep;
+        if (isWithinBounds(r, c)) {
+            ChessPiece* piece = grid[r][c];
+            if (piece && piece->getSymbol() == enemy_pawn)
+                return true;
+        }
+    }
+
     return false;
 }
+
 
 void Board::findKing(std::string& currentPlayer, int& row, int& col){
     char symbol = (currentPlayer == "white") ? 'K' : 'k';
@@ -215,4 +231,21 @@ void Board::findKing(std::string& currentPlayer, int& row, int& col){
             }
         }
     }
+}
+
+bool Board::doesMoveExposeKing(int startRow, int startCol, int endRow, int endCol, std::string& currentPlayer) {
+    ChessPiece* movedPiece = grid[startRow][startCol];
+    ChessPiece* capturedPiece = grid[endRow][endCol];
+
+    // Simulate the move
+    grid[endRow][endCol] = movedPiece;
+    grid[startRow][startCol] = nullptr;
+
+    bool kingInCheck = isKingInCheck(currentPlayer);
+
+    // Undo the move
+    grid[startRow][startCol] = movedPiece;
+    grid[endRow][endCol] = capturedPiece;
+
+    return kingInCheck;
 }

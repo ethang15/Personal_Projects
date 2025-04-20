@@ -23,6 +23,7 @@ public:
     bool isPathClear(int startRow, int startCol, int endRow, int endCol) const;
     bool isCapturingOwnPiece(int endRow, int endCol, const std::string& currentPlayer) const;
     bool isWithinBounds(int row, int col) const;
-    bool isKinginCheck(std::string& currentPlayer);
+    bool isKingInCheck(std::string& currentPlayer);
     void findKing(std::string& currentPlayer, int& row, int& col);
+    bool doesMoveExposeKing(int startRow, int startCol, int endRow, int endCol, std::string& currentPlayer);
 };

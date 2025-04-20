@@ -35,6 +35,12 @@ void Game::switchPlayer() {
 
 // Parse move command and attempt to execute it
 bool Game::parseAndExecuteMove(const std::string& input, std::string& currentPlayer) {
+    if (input.length() != 4){
+        std::cout << "Not a Valid Move, Try Again \n";
+        return false;
+    }
+    
+    
     std::string from = input.substr(0,2);
     std::string to = input.substr(2,2);
 
@@ -44,12 +50,33 @@ bool Game::parseAndExecuteMove(const std::string& input, std::string& currentPla
     int endCol = to[0] - 'a';
     int endRow = 8 - (to[1] - '0');
 
-    if (board.isWithinBounds(startRow,startCol) && board.isWithinBounds(endRow, endCol) && 
-    board.isPathClear(startRow, startCol, endRow, endCol) && !board.isCapturingOwnPiece(endRow, endCol, currentPlayer)) {
+    ChessPiece* pieceToMove = board.getPiece(startRow, startCol);
 
+    if (pieceToMove->isValidMove(startRow, startCol, endRow, endCol) && board.isWithinBounds(startRow,startCol) && 
+    board.isWithinBounds(endRow, endCol) && board.isPathClear(startRow, startCol, endRow, endCol) && 
+    !board.isCapturingOwnPiece(endRow, endCol, currentPlayer) && !board.doesMoveExposeKing(startRow, startCol, endRow, endCol, currentPlayer)) {
+
+        std::cout << "Valid Move \n";
         return board.movePiece(startRow, startCol, endRow, endCol);
+
     }
     else{
+        bool pieceHasValidMove = pieceToMove && pieceToMove->isValidMove(startRow, startCol, endRow, endCol);
+        bool inBoundsStart = board.isWithinBounds(startRow, startCol);
+        bool inBoundsEnd = board.isWithinBounds(endRow, endCol);
+        bool pathClear = board.isPathClear(startRow, startCol, endRow, endCol);
+        bool notCapturingOwn = !board.isCapturingOwnPiece(endRow, endCol, currentPlayer);
+        bool exposesKing = !board.doesMoveExposeKing(startRow, startCol, endRow, endCol, currentPlayer);
+        
+        std::cout << "Piece has valid move: " << (pieceHasValidMove ? "true" : "false") << std::endl;
+        std::cout << "Start in bounds: " << (inBoundsStart ? "true" : "false") << std::endl;
+        std::cout << "End in bounds: " << (inBoundsEnd ? "true" : "false") << std::endl;
+        std::cout << "Path is clear: " << (pathClear ? "true" : "false") << std::endl;
+        std::cout << "Not capturing own piece: " << (notCapturingOwn ? "true" : "false") << std::endl;
+        std::cout << "Move exposes king: " << (exposesKing ? "true" : "false") << std::endl;
+
+        bool moveIsValid = inBoundsStart && inBoundsEnd && pathClear && notCapturingOwn && !exposesKing;
+        std::cout << "Overall move is valid: " << (moveIsValid ? "true" : "false") << std::endl;
         std::cout << "Not a Valid Move, Try Again \n";
         return false;
     }
