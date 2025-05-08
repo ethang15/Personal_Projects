@@ -4,18 +4,25 @@
 Pawn::Pawn(const std::string& color)
     : ChessPiece(color, 'P') {}
 
-bool Pawn::isValidMove(int startRow, int startCol, int endRow, int endCol) const {
+bool Pawn::isValidMove(int startRow, int startCol, int endRow, int endCol, bool IsCapture) const {
     int direction = (color == "white") ? -1 : 1;
     int initRow = (color == "white") ? 6 : 1;
 
-    // Basic forward move by 1 square
-    if (startCol == endCol && endRow == startRow + direction) {
-        return true;
+    if(IsCapture) {
+        if ((startCol == endCol + 1 || startCol == endCol - 1) && endRow == startRow + direction){
+            return true;
+        }
     }
+    else{
+        if (startCol == endCol && endRow == startRow + direction) {
+            return true;
+        }
 
-    if (startRow == initRow && endRow-startRow == 2*direction) {
-        return true;
+        if (startRow == initRow && endRow-startRow == 2*direction) {
+            return true;
+        }
     }
+    
 
     return false;
 }

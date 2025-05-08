@@ -5,7 +5,7 @@ Bishop::Bishop(const std::string& color)
     : ChessPiece(color, 'B') {}
 
 // Very basic example: pawn moves one step forward
-bool Bishop::isValidMove(int startRow, int startCol, int endRow, int endCol) const {
+bool Bishop::isValidMove(int startRow, int startCol, int endRow, int endCol, bool isCapture) const {
     
     int rowDiff = abs(endRow - startRow);
     int colDiff = abs(endCol - startCol);

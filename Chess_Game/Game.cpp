@@ -35,11 +35,11 @@ void Game::switchPlayer() {
 
 // Parse move command and attempt to execute it
 bool Game::parseAndExecuteMove(const std::string& input, std::string& currentPlayer) {
+    
     if (input.length() != 4){
         std::cout << "Not a Valid Move, Try Again \n";
         return false;
     }
-    
     
     std::string from = input.substr(0,2);
     std::string to = input.substr(2,2);
@@ -51,38 +51,55 @@ bool Game::parseAndExecuteMove(const std::string& input, std::string& currentPla
     int endRow = 8 - (to[1] - '0');
 
     ChessPiece* pieceToMove = board.getPiece(startRow, startCol);
+    ChessPiece* endPiece = board.getPiece(endRow, endCol);
 
-    if (pieceToMove->isValidMove(startRow, startCol, endRow, endCol) && board.isWithinBounds(startRow,startCol) && 
-    board.isWithinBounds(endRow, endCol) && board.isPathClear(startRow, startCol, endRow, endCol) && 
-    !board.isCapturingOwnPiece(endRow, endCol, currentPlayer) && !board.doesMoveExposeKing(startRow, startCol, endRow, endCol, currentPlayer)) {
+    std::string opponentColor = (currentPlayer == "white") ? "black" : "white";
 
+    bool isCapturing = (endPiece && pieceToMove->getColor() != endPiece->getColor());
 
-        std::cout << "Valid Move \n";
-        bool moveAllowed = board.movePiece(startRow, startCol, endRow, endCol);
-        if ((pieceToMove->getSymbol() == 'P' && endRow == 0) || (pieceToMove->getSymbol() == 'p' && endRow == 7)){
-            board.pawnPromotion(endRow, endCol, currentPlayer);
+    bool inBoundsStart = board.isWithinBounds(startRow, startCol);
+    bool inBoundsEnd = board.isWithinBounds(endRow, endCol);
+    bool pathClear = board.isPathClear(startRow, startCol, endRow, endCol);
+    bool notCapturingOwn = !board.isCapturingOwnPiece(endRow, endCol, currentPlayer);
+    bool doesNotExposeKing = !board.doesMoveExposeKing(startRow, startCol, endRow, endCol, currentPlayer);
+    bool pieceHasValidMove = pieceToMove->isValidMove(startRow, startCol, endRow, endCol, isCapturing);
+
+    if (pieceToMove && inBoundsStart && inBoundsEnd && pathClear && notCapturingOwn && doesNotExposeKing && pieceHasValidMove) {
+
+        std::cout << "Valid Move" << std::endl;
+        bool moveAllowed = board.movePiece(startRow, startCol, endRow, endCol, isCapturing);
+        
+        board.pawnPromotion(endRow, endCol, currentPlayer, pieceToMove);
+        
+        bool isCheck = board.isKingInCheck(opponentColor);
+        if(isCheck){
+            std::cout << opponentColor << " Is in Check" << std::endl;
         }
         
         return moveAllowed;
     }
     else{
-        bool pieceHasValidMove = pieceToMove && pieceToMove->isValidMove(startRow, startCol, endRow, endCol);
-        bool inBoundsStart = board.isWithinBounds(startRow, startCol);
-        bool inBoundsEnd = board.isWithinBounds(endRow, endCol);
-        bool pathClear = board.isPathClear(startRow, startCol, endRow, endCol);
-        bool notCapturingOwn = !board.isCapturingOwnPiece(endRow, endCol, currentPlayer);
-        bool exposesKing = !board.doesMoveExposeKing(startRow, startCol, endRow, endCol, currentPlayer);
-        
-        std::cout << "Piece has valid move: " << (pieceHasValidMove ? "true" : "false") << std::endl;
-        std::cout << "Start in bounds: " << (inBoundsStart ? "true" : "false") << std::endl;
-        std::cout << "End in bounds: " << (inBoundsEnd ? "true" : "false") << std::endl;
-        std::cout << "Path is clear: " << (pathClear ? "true" : "false") << std::endl;
-        std::cout << "Not capturing own piece: " << (notCapturingOwn ? "true" : "false") << std::endl;
-        std::cout << "Move exposes king: " << (exposesKing ? "true" : "false") << std::endl;
 
-        bool moveIsValid = inBoundsStart && inBoundsEnd && pathClear && notCapturingOwn && !exposesKing;
-        std::cout << "Overall move is valid: " << (moveIsValid ? "true" : "false") << std::endl;
-        std::cout << "Not a Valid Move, Try Again \n";
+        // Individual checks with if statements and custom error messages
+        if (!inBoundsStart) {
+            std::cout << "Starting position is out of bounds" << std::endl;
+        }
+        if (!inBoundsEnd) {
+            std::cout << "Ending position is out of bounds" << std::endl;
+        }
+        if (!pathClear) {
+            std::cout << "Path is not clear" << std::endl;
+        }
+        if (!notCapturingOwn) {
+            std::cout << "Cannot capture your own piece" << std::endl;
+        }
+        if (!doesNotExposeKing) {
+            std::cout << "Move would expose your king" << std::endl;
+        }
+        if (!pieceHasValidMove) {
+            std::cout << "Piece move is invalid" << std::endl;
+        }
+
         return false;
     }
 

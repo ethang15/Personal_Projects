@@ -28,7 +28,7 @@ public:
     ~Board();
 
     void placePiece(int row, int col, ChessPiece* piece);
-    bool movePiece(int startRow, int startCol, int endRow, int endCol);
+    bool movePiece(int startRow, int startCol, int endRow, int endCol, bool isCapturing);
     void printBoard() const;
     ChessPiece* getPiece(int row, int col) const;
     void initBoard();
@@ -38,5 +38,5 @@ public:
     bool isKingInCheck(std::string& currentPlayer);
     void findKing(std::string& currentPlayer, int& row, int& col);
     bool doesMoveExposeKing(int startRow, int startCol, int endRow, int endCol, std::string& currentPlayer);
-    void pawnPromotion(int endRow, int endCol, std::string& currentPlayer);
+    void pawnPromotion(int endRow, int endCol, std::string& currentPlayer, ChessPiece* pieceToMove);
 };

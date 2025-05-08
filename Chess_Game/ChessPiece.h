@@ -13,5 +13,5 @@ public:
     std::string getColor() const;
     char getSymbol() const;
 
-    virtual bool isValidMove(int startRow, int startCol, int endRow, int endCol) const = 0;
+    virtual bool isValidMove(int startRow, int startCol, int endRow, int endCol, bool isCapture) const = 0;
 };

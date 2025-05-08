@@ -30,9 +30,9 @@ void Board::placePiece(int row, int col, ChessPiece* piece) {
     }
 }
 
-bool Board::movePiece(int startRow, int startCol, int endRow, int endCol) {
+bool Board::movePiece(int startRow, int startCol, int endRow, int endCol, bool isCapturing) {
     ChessPiece* piece = getPiece(startRow, startCol);
-    if (piece && piece->isValidMove(startRow, startCol, endRow, endCol)) {
+    if (piece && piece->isValidMove(startRow, startCol, endRow, endCol, isCapturing)) {
         delete grid[endRow][endCol];  // Remove captured piece if any
         grid[endRow][endCol] = piece;
         grid[startRow][startCol] = nullptr;
@@ -140,7 +140,6 @@ bool Board::isWithinBounds(int row, int col) const {
 
 bool Board::isKingInCheck(std::string& currentPlayer) {
     int king_row = 0, king_col = 0;
-    char symbol = (currentPlayer == "white") ? 'K' : 'k';
     char enemy_queen = (currentPlayer == "white") ? 'q' : 'Q';
     char enemy_rook = (currentPlayer == "white") ? 'r' : 'R';
     char enemy_bishop = (currentPlayer == "white") ? 'b' : 'B';
@@ -249,10 +248,12 @@ bool Board::doesMoveExposeKing(int startRow, int startCol, int endRow, int endCo
     return kingInCheck;
 }
 
-void Board::pawnPromotion(int endRow, int endCol, std::string& currentPlayer) {
-    auto queenToAdd = (currentPlayer == "white") 
-    ? new Queen("white") 
-    : new Queen("black");
+void Board::pawnPromotion(int endRow, int endCol, std::string& currentPlayer, ChessPiece* pieceToMove) {
+    if ((pieceToMove->getSymbol() == 'P' && endRow == 0) || (pieceToMove->getSymbol() == 'p' && endRow == 7)){
+        auto promotedQueen = (currentPlayer == "white") 
+        ? new Queen("white") 
+        : new Queen("black");
 
-    placePiece(endRow, endCol, queenToAdd);
+        placePiece(endRow, endCol, promotedQueen);
+    }
 }

@@ -5,7 +5,7 @@ Queen::Queen(const std::string& color)
     : ChessPiece(color, 'Q') {}
 
 // Very basic example: pawn moves one step forward
-bool Queen::isValidMove(int startRow, int startCol, int endRow, int endCol) const {
+bool Queen::isValidMove(int startRow, int startCol, int endRow, int endCol, bool isCapture) const {
 
     int rowDiff = abs(endRow - startRow);
     int colDiff = abs(endCol - startCol);
