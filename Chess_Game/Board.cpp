@@ -140,81 +140,10 @@ bool Board::isWithinBounds(int row, int col) const {
 
 bool Board::isKingInCheck(std::string& currentPlayer) {
     int king_row = 0, king_col = 0;
-    char enemy_queen = (currentPlayer == "white") ? 'q' : 'Q';
-    char enemy_rook = (currentPlayer == "white") ? 'r' : 'R';
-    char enemy_bishop = (currentPlayer == "white") ? 'b' : 'B';
-    char enemy_knight = (currentPlayer == "white") ? 'n' : 'N';
-    char enemy_pawn = (currentPlayer == "white") ? 'p' : 'P';
-
-    std::vector<std::pair<int, int>> diagonals = { {1, 1}, {1, -1}, {-1, -1}, {-1, 1}};
-    std::vector<std::pair<int, int>> straights = { {1, 0}, {-1, 0}, {0, 1}, {0, -1} };
-    std::vector<std::pair<int, int>> knights = {
-        { -2, -1 }, { -2,  1 }, { -1, -2 }, { -1,  2 },
-        {  1, -2 }, {  1,  2 }, {  2, -1 }, {  2,  1 }
-    };
-    auto pawns = (currentPlayer == "white")
-    ? std::vector<std::pair<int, int>>{ { -1, -1 }, { -1, 1 } }
-    : std::vector<std::pair<int, int>>{ { 1, -1 }, { 1, 1 } };
-
+    
     findKing(currentPlayer, king_row, king_col);
-
-    // Straights: Rooks + Queens
-    for (const auto& [rowStep, colStep] : straights) {
-        int r = king_row + rowStep;
-        int c = king_col + colStep;
-        while (isWithinBounds(r, c)) {
-            ChessPiece* piece = grid[r][c];
-            if (piece) {
-                if (piece->getSymbol() == enemy_rook || piece->getSymbol() == enemy_queen)
-                    return true;
-                break;
-            }
-            r += rowStep;
-            c += colStep;
-        }
-    }
-
-    // Diagonals: Bishops + Queens
-    for (const auto& [rowStep, colStep] : diagonals) {
-        int r = king_row + rowStep;
-        int c = king_col + colStep;
-        while (isWithinBounds(r, c)) {
-            ChessPiece* piece = grid[r][c];
-            if (piece) {
-                if (piece->getSymbol() == enemy_bishop || piece->getSymbol() == enemy_queen)
-                    return true;
-                break;
-            }
-            r += rowStep;
-            c += colStep;
-        }
-    }
-
-    // Knights
-    for (const auto& [rowStep, colStep] : knights) {
-        int r = king_row + rowStep;
-        int c = king_col + colStep;
-        if (isWithinBounds(r, c)) {
-            ChessPiece* piece = grid[r][c];
-            if (piece && piece->getSymbol() == enemy_knight)
-                return true;
-        }
-    }
-
-    // Pawns
-    for (const auto& [rowStep, colStep] : pawns) {
-        int r = king_row + rowStep;
-        int c = king_col + colStep;
-        if (isWithinBounds(r, c)) {
-            ChessPiece* piece = grid[r][c];
-            if (piece && piece->getSymbol() == enemy_pawn)
-                return true;
-        }
-    }
-
-    return false;
+    return isSquareAttacked(king_row, king_col, currentPlayer);
 }
-
 
 void Board::findKing(std::string& currentPlayer, int& row, int& col){
     char symbol = (currentPlayer == "white") ? 'K' : 'k';
@@ -256,4 +185,105 @@ void Board::pawnPromotion(int endRow, int endCol, std::string& currentPlayer, Ch
 
         placePiece(endRow, endCol, promotedQueen);
     }
+}
+
+bool Board::isCheckMate(std::string& currentPlayer){
+    int king_row = 0, king_col = 0;
+    
+    findKing(currentPlayer, king_row, king_col);
+
+    // Can the King Move to Safety?
+    for(int i = king_row - 1; i < king_row + 2; i++){
+        for(int k = king_col - 1; k < king_col + 2; k++){
+            if(isWithinBounds(i,k)){
+                if(!isSquareAttacked(i,k,currentPlayer)){
+                    return false;
+                }
+            }
+        }
+    }
+
+    // Can the King be Protected by Another Piece?
+    // Position and Piece Attacking?
+    // Pieces that can block (use isSquareAttacked but backwards)
+    
+    
+    return true;
+}
+
+bool Board::isSquareAttacked(int row, int col, std::string& currentPlayer) {
+    std::string opponentColor = (currentPlayer == "white") ? "black" : "white";
+
+    char enemy_queen  = (opponentColor == "white") ? 'Q' : 'q';
+    char enemy_rook   = (opponentColor == "white") ? 'R' : 'r';
+    char enemy_bishop = (opponentColor == "white") ? 'B' : 'b';
+    char enemy_knight = (opponentColor == "white") ? 'N' : 'n';
+    char enemy_pawn   = (opponentColor == "white") ? 'P' : 'p';
+
+    std::vector<std::pair<int, int>> diagonals = { {1, 1}, {1, -1}, {-1, -1}, {-1, 1} };
+    std::vector<std::pair<int, int>> straights = { {1, 0}, {-1, 0}, {0, 1}, {0, -1} };
+    std::vector<std::pair<int, int>> knights = {
+        { -2, -1 }, { -2,  1 }, { -1, -2 }, { -1,  2 },
+        {  1, -2 }, {  1,  2 }, {  2, -1 }, {  2,  1 }
+    };
+
+    auto pawns = (opponentColor == "white")
+        ? std::vector<std::pair<int, int>>{ {-1, -1}, {-1, 1} } // white pawns attack upward
+        : std::vector<std::pair<int, int>>{ {1, -1}, {1, 1} };  // black pawns attack downward
+
+    // Straights: Rooks + Queens
+    for (const auto& [rowStep, colStep] : straights) {
+        int r = row + rowStep;
+        int c = col + colStep;
+        while (isWithinBounds(r, c)) {
+            ChessPiece* piece = grid[r][c];
+            if (piece) {
+                if (piece->getSymbol() == enemy_rook || piece->getSymbol() == enemy_queen)
+                    return true;
+                break;
+            }
+            r += rowStep;
+            c += colStep;
+        }
+    }
+
+    // Diagonals: Bishops + Queens
+    for (const auto& [rowStep, colStep] : diagonals) {
+        int r = row + rowStep;
+        int c = col + colStep;
+        while (isWithinBounds(r, c)) {
+            ChessPiece* piece = grid[r][c];
+            if (piece) {
+                if (piece->getSymbol() == enemy_bishop || piece->getSymbol() == enemy_queen)
+                    return true;
+                break;
+            }
+            r += rowStep;
+            c += colStep;
+        }
+    }
+
+    // Knights
+    for (const auto& [rowStep, colStep] : knights) {
+        int r = row + rowStep;
+        int c = col + colStep;
+        if (isWithinBounds(r, c)) {
+            ChessPiece* piece = grid[r][c];
+            if (piece && piece->getSymbol() == enemy_knight)
+                return true;
+        }
+    }
+
+    // Pawns
+    for (const auto& [rowStep, colStep] : pawns) {
+        int r = row + rowStep;
+        int c = col + colStep;
+        if (isWithinBounds(r, c)) {
+            ChessPiece* piece = grid[r][c];
+            if (piece && piece->getSymbol() == enemy_pawn)
+                return true;
+        }
+    }
+
+    return false;
 }

@@ -39,4 +39,6 @@ public:
     void findKing(std::string& currentPlayer, int& row, int& col);
     bool doesMoveExposeKing(int startRow, int startCol, int endRow, int endCol, std::string& currentPlayer);
     void pawnPromotion(int endRow, int endCol, std::string& currentPlayer, ChessPiece* pieceToMove);
+    bool isCheckMate(std::string& currentPlayer);
+    bool isSquareAttacked(int row, int col, std::string& currentPlayer);
 };
